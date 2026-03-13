@@ -1,0 +1,52 @@
+{
+	"name": "devroast",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev --turbopack",
+		"build": "next build",
+		"start": "next start",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"db:seed": "tsx --env-file=.env src/db/seed.ts"
+	},
+	"packageManager": "pnpm@10.23.0",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"sharp"
+		]
+	},
+	"dependencies": {
+		"@base-ui/react": "^1.3.0",
+		"drizzle-orm": "^0.45.1",
+		"highlight.js": "^11.11.1",
+		"lucide-react": "^0.577.0",
+		"nanoid": "^5.1.6",
+		"next": "16.1.6",
+		"pg": "^8.20.0",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4",
+		"shiki": "^4.0.2",
+		"tailwind-merge": "^3.5.0",
+		"tailwind-variants": "^3.2.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@faker-js/faker": "^10.3.0",
+		"@tailwindcss/postcss": "^4.2.1",
+		"@types/node": "25.5.0",
+		"@types/pg": "^8.18.0",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
+		"drizzle-kit": "^0.31.9",
+		"postcss": "^8.5.8",
+		"tailwindcss": "^4.2.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	}
+}

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+	/* Fonts */
+	--default-font-family: system-ui, -apple-system, sans-serif;
+	--default-mono-font-family: var(--font-jetbrains-mono), ui-monospace,
+		monospace;
+	--font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+	/* Spacing */
+	--spacing-xs: 4px;
+	--spacing-sm: 8px;
+	--spacing-md: 16px;
+	--spacing-lg: 24px;
+	--spacing-xl: 40px;
+
+	/* Radius */
+	--radius-none: 0px;
+	--radius-m: 16px;
+	--radius-pill: 999px;
+
+	/* Colors - Background */
+	--color-bg-page: #0a0a0a;
+	--color-bg-surface: #0f0f0f;
+	--color-bg-elevated: #1a1a1a;
+	--color-bg-input: #111111;
+
+	/* Colors - Text */
+	--color-text-primary: #fafafa;
+	--color-text-secondary: #6b7280;
+	--color-text-tertiary: #4b5563;
+
+	/* Colors - Border */
+	--color-border-primary: #2a2a2a;
+	--color-border-secondary: #252525;
+	--color-border-focus: #10b981;
+
+	/* Colors - Accent */
+	--color-accent-green: #10b981;
+	--color-accent-red: #ef4444;
+	--color-accent-amber: #f59e0b;
+	--color-accent-cyan: #06b6d4;
+
+	/* Colors - Syntax Highlighting */
+	--color-syn-keyword: #a0a0a0;
+	--color-syn-function: #ffc799;
+	--color-syn-variable: #ffffff;
+	--color-syn-operator: #a0a0a0;
+	--color-syn-number: #ffc799;
+	--color-syn-string: #99ffe4;
+	--color-syn-type: #ffc799;
+	--color-syn-property: #a0a0a0;
+
+	/* Colors - Diff */
+	--color-diff-removed-bg: #1a0a0a;
+	--color-diff-added-bg: #0a1a0f;
+}
