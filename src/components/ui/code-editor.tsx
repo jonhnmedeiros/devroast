@@ -252,6 +252,9 @@ function useScrollSync(
 // Component
 // ---------------------------------------------------------------------------
 
+/** Default character limit for code snippets */
+const DEFAULT_MAX_LENGTH = 2000;
+
 type CodeEditorProps = {
 	value?: string;
 	onChange?: (value: string) => void;
@@ -259,6 +262,12 @@ type CodeEditorProps = {
 	onLanguageChange?: (language: string) => void;
 	placeholder?: string;
 	className?: string;
+	/** Maximum number of characters allowed. Defaults to 5000. */
+	maxLength?: number;
+	/** Show character counter in bottom-right corner. Defaults to true. */
+	showCharacterCount?: boolean;
+	/** Called when the character count changes relative to the limit */
+	onLimitChange?: (isOverLimit: boolean) => void;
 };
 
 function CodeEditor({
@@ -268,6 +277,9 @@ function CodeEditor({
 	onLanguageChange,
 	placeholder = "// paste your code here...",
 	className,
+	maxLength = DEFAULT_MAX_LENGTH,
+	showCharacterCount = true,
+	onLimitChange,
 }: CodeEditorProps) {
 	// Internal state
 	const [internalValue, setInternalValue] = useState(value);
@@ -279,6 +291,19 @@ function CodeEditor({
 	const code = onChange ? value : internalValue;
 	const activeLanguage =
 		controlledLanguage ?? manualLanguage ?? detectedLanguage ?? "javascript";
+
+	// Character count and limit
+	const charCount = code.length;
+	const isOverLimit = charCount > maxLength;
+	const prevOverLimitRef = useRef(isOverLimit);
+
+	// Notify parent when limit state changes
+	useEffect(() => {
+		if (prevOverLimitRef.current !== isOverLimit) {
+			prevOverLimitRef.current = isOverLimit;
+			onLimitChange?.(isOverLimit);
+		}
+	}, [isOverLimit, onLimitChange]);
 
 	// Refs
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -497,6 +522,20 @@ function CodeEditor({
 					/>
 				</div>
 			</div>
+
+			{/* Character Counter */}
+			{showCharacterCount && (
+				<div className="flex items-center justify-end h-8 px-4 border-t border-border-primary shrink-0">
+					<span
+						className={twMerge(
+							"font-mono text-xs",
+							isOverLimit ? "text-accent-red" : "text-text-tertiary",
+						)}
+					>
+						{charCount.toLocaleString()}/{maxLength.toLocaleString()}
+					</span>
+				</div>
+			)}
 		</div>
 	);
 }

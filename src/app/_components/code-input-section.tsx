@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CodeEditor } from "@/components/ui/code-editor";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { submitRoast } from "../actions";
 
 const PLACEHOLDER_CODE = `function calculateTotal(items) {
@@ -29,9 +29,14 @@ function CodeInputSection() {
 	const [code, setCode] = useState(PLACEHOLDER_CODE);
 	const [roastMode, setRoastMode] = useState(true);
 	const [isPending, startTransition] = useTransition();
+	const [isOverLimit, setIsOverLimit] = useState(false);
+
+	const handleLimitChange = useCallback((overLimit: boolean) => {
+		setIsOverLimit(overLimit);
+	}, []);
 
 	function handleSubmit() {
-		if (!code.trim() || isPending) return;
+		if (!code.trim() || isPending || isOverLimit) return;
 
 		startTransition(async () => {
 			try {
@@ -44,10 +49,16 @@ function CodeInputSection() {
 		});
 	}
 
+	const isDisabled = isPending || !code.trim() || isOverLimit;
+
 	return (
 		<>
 			{/* Code Editor */}
-			<CodeEditor value={code} onChange={setCode} />
+			<CodeEditor
+				value={code}
+				onChange={setCode}
+				onLimitChange={handleLimitChange}
+			/>
 
 			{/* Actions Bar */}
 			<div className="flex items-center justify-between w-full max-w-[780px]">
@@ -61,11 +72,7 @@ function CodeInputSection() {
 						{"// maximum sarcasm enabled"}
 					</span>
 				</div>
-				<Button
-					variant="primary"
-					onClick={handleSubmit}
-					disabled={isPending || !code.trim()}
-				>
+				<Button variant="primary" onClick={handleSubmit} disabled={isDisabled}>
 					{isPending ? "$ roasting..." : "$ roast_my_code"}
 				</Button>
 			</div>
