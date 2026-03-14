@@ -458,7 +458,7 @@ function CodeEditor({
 			</div>
 
 			{/* Code Body */}
-			<div className="flex flex-1 overflow-hidden relative">
+			<div className="flex flex-1 min-h-0 relative">
 				{/* Line Numbers */}
 				<div
 					ref={lineNumbersRef}
@@ -468,19 +468,19 @@ function CodeEditor({
 				</div>
 
 				{/* Code Area: overlay + textarea stacked */}
-				<div className="relative flex-1 overflow-hidden">
+				<div className="relative flex-1 min-h-0">
 					{/* Highlighted overlay (behind textarea) */}
 					<div
 						ref={overlayRef}
 						aria-hidden="true"
-						className="absolute inset-0 overflow-hidden pointer-events-none py-2.5 px-4 [&_pre]:!bg-transparent [&_pre]:!m-0 [&_pre]:!p-0 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:leading-[20px] [&_code]:font-mono [&_code]:text-xs [&_code]:leading-[20px]"
+						className="absolute inset-0 overflow-auto pointer-events-none py-2.5 px-4 [&_pre]:!bg-transparent [&_pre]:!m-0 [&_pre]:!p-0 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:leading-[20px] [&_code]:font-mono [&_code]:text-xs [&_code]:leading-[20px]"
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: shiki generates trusted HTML
 						dangerouslySetInnerHTML={{
 							__html: highlightedHtml,
 						}}
 					/>
 
-					{/* Textarea (transparent, captures input) */}
+					{/* Textarea (transparent, captures input — scrolls, overlay follows) */}
 					<textarea
 						ref={textareaRef}
 						value={code}
@@ -492,7 +492,7 @@ function CodeEditor({
 						autoCapitalize="off"
 						autoComplete="off"
 						autoCorrect="off"
-						className="absolute inset-0 w-full h-full py-2.5 px-4 bg-transparent font-mono text-xs leading-[20px] text-transparent caret-text-primary resize-none outline-none placeholder:text-text-tertiary z-10"
+						className="absolute inset-0 w-full h-full py-2.5 px-4 bg-transparent font-mono text-xs leading-[20px] text-transparent caret-text-primary resize-none outline-none placeholder:text-text-tertiary z-10 overflow-auto"
 						placeholder={code ? undefined : placeholder}
 					/>
 				</div>
