@@ -1,6 +1,8 @@
 import { button } from "@/components/ui/button";
 import { getLeaderboardPreview, getStats } from "@/db/queries";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { CodeInputSection } from "./_components/code-input-section";
+import { StatsCounter } from "./_components/stats-counter";
 
 function scoreColor(score: number) {
 	if (score <= 3) return "text-accent-red";
@@ -105,42 +107,40 @@ async function LeaderboardPreview() {
 }
 
 export default async function HomePage() {
-	const stats = await getStats();
+	prefetch(trpc.leaderboard.stats.queryOptions());
 
 	return (
-		<main className="flex-1 flex flex-col items-center gap-8 w-full max-w-[1360px] mx-auto px-10 pt-20 pb-[60px]">
-			{/* Hero */}
-			<div className="flex flex-col items-center gap-3">
-				<div className="flex items-center gap-3">
-					<span className="font-mono text-[36px] font-bold text-accent-green">
-						$
-					</span>
-					<h1 className="font-mono text-[36px] font-bold text-text-primary">
-						paste your code. get roasted.
-					</h1>
+		<HydrateClient>
+			<main className="flex-1 flex flex-col items-center gap-8 w-full max-w-[1360px] mx-auto px-10 pt-20 pb-[60px]">
+				{/* Hero */}
+				<div className="flex flex-col items-center gap-3">
+					<div className="flex items-center gap-3">
+						<span className="font-mono text-[36px] font-bold text-accent-green">
+							$
+						</span>
+						<h1 className="font-mono text-[36px] font-bold text-text-primary">
+							paste your code. get roasted.
+						</h1>
+					</div>
+					<p className="font-mono text-sm text-text-secondary">
+						{
+							"// drop your code below and we'll rate it — brutally honest or full roast mode"
+						}
+					</p>
 				</div>
-				<p className="font-mono text-sm text-text-secondary">
-					{
-						"// drop your code below and we'll rate it — brutally honest or full roast mode"
-					}
-				</p>
-			</div>
 
-			{/* Client-side code input + roast mode toggle */}
-			<CodeInputSection />
+				{/* Client-side code input + roast mode toggle */}
+				<CodeInputSection />
 
-			{/* Footer Stats */}
-			<div className="flex items-center justify-center gap-6 font-mono text-xs text-text-tertiary">
-				<span>{stats.total.toLocaleString()} codes roasted</span>
-				<span>&middot;</span>
-				<span>avg score: {stats.avgScore.toFixed(1)}/10</span>
-			</div>
+				{/* Footer Stats */}
+				<StatsCounter />
 
-			{/* Spacer */}
-			<div className="h-[60px]" />
+				{/* Spacer */}
+				<div className="h-[60px]" />
 
-			{/* Leaderboard Preview */}
-			<LeaderboardPreview />
-		</main>
+				{/* Leaderboard Preview */}
+				<LeaderboardPreview />
+			</main>
+		</HydrateClient>
 	);
 }
