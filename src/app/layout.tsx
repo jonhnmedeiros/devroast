@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/ui/navbar";
+import { TRPCReactProvider } from "@/trpc/client";
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -22,12 +23,14 @@ export default function RootLayout({
 	return (
 		<html lang="pt-BR" className={jetbrainsMono.variable}>
 			<body className="min-h-screen bg-bg-page flex flex-col">
-				<Navbar.Root>
-					<Navbar.Logo />
-					<Navbar.Spacer />
-					<Navbar.Link href="/leaderboard">leaderboard</Navbar.Link>
-				</Navbar.Root>
-				{children}
+				<TRPCReactProvider>
+					<Navbar.Root>
+						<Navbar.Logo />
+						<Navbar.Spacer />
+						<Navbar.Link href="/leaderboard">leaderboard</Navbar.Link>
+					</Navbar.Root>
+					{children}
+				</TRPCReactProvider>
 			</body>
 		</html>
 	);
