@@ -373,26 +373,35 @@ Componentes que dependem de operacoes assincronas (ex: syntax highlighting) deve
 ```tsx
 import type { BundledLanguage } from "shiki";
 import { codeToHtml } from "shiki";
+import { twMerge } from "tailwind-merge";
 
 type CodeBlockProps = {
 	code: string;
 	lang: BundledLanguage;
-	fileName?: string;
+	showLineNumbers?: boolean;
 	className?: string;
 };
 
-async function CodeBlock({ code, lang, fileName, className }: CodeBlockProps) {
+async function CodeBlock({ code, lang, showLineNumbers, className }: CodeBlockProps) {
 	const html = await codeToHtml(code, { lang, theme: "vesper" });
+	const lineCount = showLineNumbers ? code.split("\n").length : 0;
 
 	return (
-		<div className={["flex flex-col overflow-hidden bg-bg-input border border-border-primary", className].filter(Boolean).join(" ")}>
-			{fileName && (
-				<div className="flex items-center h-10 px-4 border-b border-border-primary">
-					<span className="font-mono text-xs text-text-tertiary">{fileName}</span>
+		<div className={twMerge("flex overflow-hidden bg-bg-input border border-border-primary", className)}>
+			{showLineNumbers && (
+				<div className="flex flex-col items-end py-3.5 px-2.5 border-r border-border-primary shrink-0 bg-bg-surface select-none">
+					{Array.from({ length: lineCount }, (_, i) => (
+						<span key={`ln-${i + 1}`} className="font-mono text-xs leading-relaxed text-text-tertiary">
+							{i + 1}
+						</span>
+					))}
 				</div>
 			)}
 			<div
-				className="overflow-x-auto [&_pre]:!bg-transparent [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[13px]"
+				className={twMerge(
+					"flex-1 overflow-x-auto [&_pre]:!bg-transparent [&_pre]:font-mono [&_pre]:text-[13px] [&_pre]:leading-relaxed [&_code]:font-mono",
+					showLineNumbers ? "[&_pre]:py-3.5 [&_pre]:px-4 [&_pre]:!m-0" : "[&_pre]:p-4",
+				)}
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: shiki generates trusted HTML server-side
 				dangerouslySetInnerHTML={{ __html: html }}
 			/>
@@ -403,7 +412,9 @@ async function CodeBlock({ code, lang, fileName, className }: CodeBlockProps) {
 export { CodeBlock, type CodeBlockProps };
 ```
 
-**shiki**: Use `codeToHtml(code, { lang, theme: "vesper" })`. O tema `vesper` e bundled. Retorna HTML string. Sem line numbers.
+**shiki**: Use `codeToHtml(code, { lang, theme: "vesper" })`. O tema `vesper` e bundled. Retorna HTML string.
+
+**CodeBlock nao tem header embutido.** Headers (bolinhas macOS, fileName) sao compostos externamente. Ver exemplos no `AGENTS.md` raiz, secao "CodeBlock — Composicao de Headers".
 
 ## Componentes Client-Side com Highlighting (CodeEditor)
 
