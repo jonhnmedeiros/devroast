@@ -5,41 +5,52 @@ import { twMerge } from "tailwind-merge";
 type CodeBlockProps = {
 	code: string;
 	lang: BundledLanguage;
-	fileName?: string;
+	showLineNumbers?: boolean;
 	className?: string;
 };
 
-async function CodeBlock({ code, lang, fileName, className }: CodeBlockProps) {
+async function CodeBlock({
+	code,
+	lang,
+	showLineNumbers,
+	className,
+}: CodeBlockProps) {
 	const html = await codeToHtml(code, {
 		lang,
 		theme: "vesper",
 	});
 
+	const lineCount = showLineNumbers ? code.split("\n").length : 0;
+
 	return (
 		<div
 			className={twMerge(
-				"flex flex-col overflow-hidden bg-bg-input border border-border-primary",
+				"flex overflow-hidden bg-bg-input border border-border-primary",
 				className,
 			)}
 		>
-			{/* Window Header */}
-			<div className="flex items-center h-10 px-4 border-b border-border-primary gap-3 shrink-0">
-				<div className="flex items-center gap-2">
-					<span className="size-3 rounded-full bg-red-500" />
-					<span className="size-3 rounded-full bg-amber-500" />
-					<span className="size-3 rounded-full bg-emerald-500" />
+			{/* Line Numbers */}
+			{showLineNumbers && (
+				<div className="flex flex-col items-end py-3.5 px-2.5 border-r border-border-primary shrink-0 bg-bg-surface select-none">
+					{Array.from({ length: lineCount }, (_, i) => (
+						<span
+							key={`ln-${i + 1}`}
+							className="font-mono text-xs leading-relaxed text-text-tertiary"
+						>
+							{i + 1}
+						</span>
+					))}
 				</div>
-				<div className="flex-1" />
-				{fileName && (
-					<span className="font-mono text-xs text-text-tertiary">
-						{fileName}
-					</span>
-				)}
-			</div>
+			)}
 
 			{/* Code Body — rendered by shiki (trusted server-side HTML) */}
 			<div
-				className="overflow-x-auto [&_pre]:!bg-transparent [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[13px] [&_pre]:leading-relaxed [&_code]:font-mono"
+				className={twMerge(
+					"flex-1 overflow-x-auto [&_pre]:!bg-transparent [&_pre]:font-mono [&_pre]:text-[13px] [&_pre]:leading-relaxed [&_code]:font-mono",
+					showLineNumbers
+						? "[&_pre]:py-3.5 [&_pre]:px-4 [&_pre]:!m-0"
+						: "[&_pre]:p-4",
+				)}
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: shiki generates trusted HTML server-side
 				dangerouslySetInnerHTML={{ __html: html }}
 			/>

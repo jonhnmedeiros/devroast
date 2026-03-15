@@ -82,7 +82,21 @@ export default async function RoastResultsPage({
 			{/* Submitted Code Section */}
 			<section className="flex flex-col gap-4">
 				<SectionTitle prompt="//" title="your_submission" />
-				<CodeBlock code={roast.code} lang={roast.language as BundledLanguage} />
+				<div className="flex flex-col overflow-hidden border border-border-primary bg-bg-input">
+					{/* Window Header */}
+					<div className="flex items-center h-10 px-4 border-b border-border-primary gap-3 shrink-0">
+						<div className="flex items-center gap-2">
+							<span className="size-3 rounded-full bg-red-500" />
+							<span className="size-3 rounded-full bg-amber-500" />
+							<span className="size-3 rounded-full bg-emerald-500" />
+						</div>
+					</div>
+					<CodeBlock
+						code={roast.code}
+						lang={roast.language as BundledLanguage}
+						className="border-0"
+					/>
+				</div>
 			</section>
 
 			<Divider />

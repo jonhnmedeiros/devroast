@@ -163,12 +163,25 @@ export default function ComponentsPage() {
 
 				{/* Code Block (async server component) */}
 				<Section title="code_block">
-					<CodeBlock
-						code={CODE_SAMPLE}
-						lang="javascript"
-						fileName="calculate.js"
-						className="w-[560px]"
-					/>
+					<div className="flex flex-col overflow-hidden border border-border-primary bg-bg-input w-[560px]">
+						{/* Window Header */}
+						<div className="flex items-center h-10 px-4 border-b border-border-primary gap-3 shrink-0">
+							<div className="flex items-center gap-2">
+								<span className="size-3 rounded-full bg-red-500" />
+								<span className="size-3 rounded-full bg-amber-500" />
+								<span className="size-3 rounded-full bg-emerald-500" />
+							</div>
+							<div className="flex-1" />
+							<span className="font-mono text-xs text-text-tertiary">
+								calculate.js
+							</span>
+						</div>
+						<CodeBlock
+							code={CODE_SAMPLE}
+							lang="javascript"
+							className="border-0"
+						/>
+					</div>
 				</Section>
 
 				{/* Diff Lines */}

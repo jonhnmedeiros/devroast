@@ -1,6 +1,5 @@
+import { CodeBlock } from "@/components/ui/code-block";
 import type { BundledLanguage } from "shiki";
-import { codeToHtml } from "shiki";
-import { twMerge } from "tailwind-merge";
 
 // ---------------------------------------------------------------------------
 // Static Data (based on Pencil design)
@@ -57,58 +56,6 @@ const STATS = {
 	total: 2847,
 	avgScore: 4.2,
 };
-
-// ---------------------------------------------------------------------------
-// Helper Components
-// ---------------------------------------------------------------------------
-
-type LeaderboardCodeBlockProps = {
-	code: string;
-	lang: BundledLanguage;
-	className?: string;
-};
-
-async function LeaderboardCodeBlock({
-	code,
-	lang,
-	className,
-}: LeaderboardCodeBlockProps) {
-	const html = await codeToHtml(code, {
-		lang,
-		theme: "vesper",
-	});
-
-	const lines = code.split("\n");
-	const lineCount = lines.length;
-
-	return (
-		<div
-			className={twMerge(
-				"flex overflow-hidden bg-bg-input border border-border-primary h-[120px]",
-				className,
-			)}
-		>
-			{/* Line Numbers */}
-			<div className="flex flex-col items-end gap-1.5 bg-bg-surface py-3.5 px-2.5 border-r border-border-primary w-10 shrink-0">
-				{Array.from({ length: lineCount }, (_, i) => (
-					<span
-						key={`ln-${i + 1}`}
-						className="font-mono text-xs leading-tight text-text-tertiary"
-					>
-						{i + 1}
-					</span>
-				))}
-			</div>
-
-			{/* Code Content */}
-			<div
-				className="flex-1 overflow-auto py-3.5 px-4 [&_pre]:!bg-transparent [&_pre]:!m-0 [&_pre]:!p-0 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:leading-tight [&_code]:font-mono [&_code]:text-xs"
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: shiki generates trusted HTML server-side
-				dangerouslySetInnerHTML={{ __html: html }}
-			/>
-		</div>
-	);
-}
 
 // ---------------------------------------------------------------------------
 // Page Component (SSR)
@@ -187,10 +134,11 @@ export default async function LeaderboardPage() {
 								</div>
 
 								{/* Code Block */}
-								<LeaderboardCodeBlock
+								<CodeBlock
 									code={entry.code}
 									lang={entry.language as BundledLanguage}
-									className="border-0 border-t-0"
+									showLineNumbers
+									className="border-0 h-[120px]"
 								/>
 							</article>
 						);
