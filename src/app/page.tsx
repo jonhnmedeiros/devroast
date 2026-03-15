@@ -1,7 +1,9 @@
 import { button } from "@/components/ui/button";
 import { getLeaderboardPreview, getStats } from "@/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { Suspense } from "react";
 import { CodeInputSection } from "./_components/code-input-section";
+import { LeaderboardPreviewSkeleton } from "./_components/leaderboard-preview-skeleton";
 import { StatsCounter } from "./_components/stats-counter";
 
 function scoreColor(score: number) {
@@ -99,8 +101,8 @@ async function LeaderboardPreview() {
 
 			{/* Fade Hint */}
 			<p className="text-center font-mono text-xs text-text-tertiary">
-				showing top 3 of {stats.total.toLocaleString()} &middot; view full
-				leaderboard &gt;&gt;
+				showing top 3 of {stats.total.toLocaleString("en-US")} &middot; view
+				full leaderboard &gt;&gt;
 			</p>
 		</section>
 	);
@@ -139,7 +141,9 @@ export default async function HomePage() {
 				<div className="h-[60px]" />
 
 				{/* Leaderboard Preview */}
-				<LeaderboardPreview />
+				<Suspense fallback={<LeaderboardPreviewSkeleton />}>
+					<LeaderboardPreview />
+				</Suspense>
 			</main>
 		</HydrateClient>
 	);

@@ -85,7 +85,7 @@ export default async function LeaderboardPage() {
 
 					{/* Stats Row */}
 					<div className="flex items-center gap-2 font-mono text-xs text-text-tertiary">
-						<span>{STATS.total.toLocaleString()} submissions</span>
+						<span>{STATS.total.toLocaleString("en-US")} submissions</span>
 						<span>·</span>
 						<span>avg score: {STATS.avgScore.toFixed(1)}/10</span>
 					</div>

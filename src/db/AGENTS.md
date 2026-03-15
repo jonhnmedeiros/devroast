@@ -71,9 +71,28 @@ Executar com `npx tsx src/db/seed.ts`. Gera 100 roasts com:
 - Diffs com templates por linguagem
 - Scores com distribuicao tendendo para notas baixas
 
+## Queries em paralelo com Promise.all
+
+Quando uma pagina ou componente precisa de multiplas queries independentes, **sempre** use `Promise.all` para executar em paralelo. Nunca faca `await` sequencial para queries que nao dependem uma da outra:
+
+```tsx
+// CORRETO — queries independentes em paralelo
+const [entries, stats] = await Promise.all([
+  getLeaderboardPreview(),
+  getStats(),
+]);
+
+// ERRADO — sequencial desnecessario, dobra o tempo de espera
+const entries = await getLeaderboardPreview();
+const stats = await getStats();
+```
+
+**Regra:** se as queries nao tem dependencia entre si (o resultado de uma nao e input da outra), use `Promise.all`.
+
 ## Regras
 
 1. **Nunca importe `db` diretamente em client components** — use tRPC
 2. **Queries novas** vao em `queries.ts` como funcoes exportadas
 3. **Migrations**: use `drizzle-kit` para gerar e aplicar
 4. **DATABASE_URL**: obrigatorio no `.env`
+5. **Queries independentes em paralelo** — sempre use `Promise.all` (ver secao acima)
