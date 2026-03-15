@@ -1,7 +1,7 @@
 "use client";
 
-import { Collapsible } from "@base-ui/react/collapsible";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 type CollapsibleCodeProps = {
 	children: React.ReactNode;
@@ -12,27 +12,32 @@ function CollapsibleCode({
 	children,
 	defaultExpanded = false,
 }: CollapsibleCodeProps) {
+	const [expanded, setExpanded] = useState(defaultExpanded);
+
 	return (
-		<Collapsible.Root defaultOpen={defaultExpanded}>
-			<Collapsible.Panel
-				keepMounted
-				className="group/panel relative overflow-hidden data-[closed]:max-h-[120px]"
+		<div>
+			<div
+				className="relative overflow-hidden"
+				style={expanded ? undefined : { maxHeight: 120 }}
 			>
 				{children}
 				{/* Fade gradient — only visible when collapsed */}
-				<div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-bg-input to-transparent pointer-events-none transition-opacity group-data-[open]/panel:opacity-0" />
-			</Collapsible.Panel>
+				{!expanded && (
+					<div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-bg-input to-transparent pointer-events-none" />
+				)}
+			</div>
 
-			<Collapsible.Trigger className="group/trigger flex items-center gap-1.5 pt-2 font-mono text-xs text-text-tertiary hover:text-text-secondary transition-colors">
-				<ChevronDown className="size-3 transition-transform group-data-[panel-open]/trigger:rotate-180" />
-				<span className="group-data-[panel-open]/trigger:hidden">
-					show more
-				</span>
-				<span className="hidden group-data-[panel-open]/trigger:inline">
-					show less
-				</span>
-			</Collapsible.Trigger>
-		</Collapsible.Root>
+			<button
+				type="button"
+				onClick={() => setExpanded((prev) => !prev)}
+				className="flex items-center gap-1.5 pt-2 font-mono text-xs text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
+			>
+				<ChevronDown
+					className={`size-3 transition-transform ${expanded ? "rotate-180" : ""}`}
+				/>
+				<span>{expanded ? "show less" : "show more"}</span>
+			</button>
+		</div>
 	);
 }
 
