@@ -1,8 +1,11 @@
 import { button } from "@/components/ui/button";
+import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboardPreview, getStats } from "@/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { Suspense } from "react";
+import type { BundledLanguage } from "shiki";
 import { CodeInputSection } from "./_components/code-input-section";
+import { CollapsibleCode } from "./_components/collapsible-code";
 import { LeaderboardPreviewSkeleton } from "./_components/leaderboard-preview-skeleton";
 import { StatsCounter } from "./_components/stats-counter";
 
@@ -55,46 +58,55 @@ async function LeaderboardPreview() {
 
 				{/* Rows */}
 				{entries.map((row, idx) => {
-					const lines = row.code.split("\n");
+					const lineCount = row.code.split("\n").length;
+					const needsCollapsible = lineCount > 5;
+
 					return (
-						<a
+						<div
 							key={row.id}
-							href={`/roast/${row.id}`}
-							className={`flex items-start px-5 py-4 font-mono text-xs hover:bg-bg-surface transition-colors ${
+							className={`flex items-start px-5 py-4 font-mono text-xs ${
 								idx < entries.length - 1 ? "border-b border-border-primary" : ""
 							}`}
 						>
 							<span
-								className={`w-[50px] shrink-0 ${
+								className={`w-[50px] shrink-0 pt-2 ${
 									idx === 0 ? "text-accent-amber" : "text-text-secondary"
 								}`}
 							>
 								{idx + 1}
 							</span>
 							<span
-								className={`w-[70px] shrink-0 font-bold ${scoreColor(row.score)}`}
+								className={`w-[70px] shrink-0 pt-2 font-bold ${scoreColor(row.score)}`}
 							>
 								{row.score.toFixed(1)}
 							</span>
-							<div className="flex flex-col gap-0.5 flex-1 min-w-0">
-								{lines.map((line) => (
-									<span
-										key={line}
-										className={
-											line.trimStart().startsWith("//") ||
-											line.trimStart().startsWith("--")
-												? "text-text-tertiary"
-												: "text-text-primary"
-										}
-									>
-										{line}
-									</span>
-								))}
+							<div className="flex-1 min-w-0">
+								{needsCollapsible ? (
+									<CollapsibleCode>
+										<CodeBlock
+											code={row.code}
+											lang={row.language as BundledLanguage}
+											className="border-0"
+										/>
+									</CollapsibleCode>
+								) : (
+									<CodeBlock
+										code={row.code}
+										lang={row.language as BundledLanguage}
+										className="border-0"
+									/>
+								)}
 							</div>
-							<span className="w-[100px] shrink-0 text-text-secondary">
-								{row.language}
-							</span>
-						</a>
+							<div className="w-[100px] shrink-0 flex flex-col gap-1.5 pt-2">
+								<span className="text-text-secondary">{row.language}</span>
+								<a
+									href={`/roast/${row.id}`}
+									className="text-accent-green hover:text-accent-green/80 transition-colors"
+								>
+									view &rarr;
+								</a>
+							</div>
+						</div>
 					);
 				})}
 			</div>
