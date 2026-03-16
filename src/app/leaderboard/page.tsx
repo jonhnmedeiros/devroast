@@ -1,6 +1,7 @@
 import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboard } from "@/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { Suspense } from "react";
 import type { BundledLanguage } from "shiki";
 import { CollapsibleCode } from "../_components/collapsible-code";
 import { LeaderboardStats } from "../_components/leaderboard-stats";
@@ -11,9 +12,106 @@ function scoreColor(score: number) {
 	return "text-accent-green";
 }
 
-export default async function LeaderboardPage() {
+async function LeaderboardEntries() {
 	const entries = await getLeaderboard(20);
 
+	return (
+		<section className="flex flex-col gap-5">
+			{entries.map((entry, idx) => {
+				const needsCollapsible = entry.lineCount > 5;
+
+				return (
+					<article
+						key={entry.id}
+						className="flex flex-col border border-border-primary overflow-hidden"
+					>
+						{/* Meta Row */}
+						<div className="flex items-center justify-between h-12 px-5 border-b border-border-primary">
+							{/* Left: Rank + Score */}
+							<div className="flex items-center gap-4">
+								{/* Rank */}
+								<div className="flex items-center gap-1.5 font-mono">
+									<span className="text-[13px] text-text-tertiary">#</span>
+									<span className="text-sm font-bold text-accent-amber">
+										{idx + 1}
+									</span>
+								</div>
+
+								{/* Score */}
+								<div className="flex items-center gap-1.5 font-mono">
+									<span className="text-xs text-text-tertiary">score</span>
+									<span
+										className={`text-sm font-bold ${scoreColor(entry.score)}`}
+									>
+										{entry.score.toFixed(1)}
+									</span>
+								</div>
+							</div>
+
+							{/* Right: Language + Lines + View Link */}
+							<div className="flex items-center gap-3 font-mono text-xs">
+								<span className="text-text-secondary">{entry.language}</span>
+								<span className="text-text-tertiary">
+									{entry.lineCount} line
+									{entry.lineCount !== 1 ? "s" : ""}
+								</span>
+								<a
+									href={`/roast/${entry.id}`}
+									className="text-accent-green hover:text-accent-green/80 transition-colors"
+								>
+									view &rarr;
+								</a>
+							</div>
+						</div>
+
+						{/* Code Block */}
+						{needsCollapsible ? (
+							<CollapsibleCode>
+								<CodeBlock
+									code={entry.code}
+									lang={entry.language as BundledLanguage}
+									showLineNumbers
+									className="border-0"
+								/>
+							</CollapsibleCode>
+						) : (
+							<CodeBlock
+								code={entry.code}
+								lang={entry.language as BundledLanguage}
+								showLineNumbers
+								className="border-0 max-h-[120px]"
+							/>
+						)}
+					</article>
+				);
+			})}
+		</section>
+	);
+}
+
+function LeaderboardEntriesSkeleton() {
+	return (
+		<section className="flex flex-col gap-5">
+			{Array.from({ length: 5 }).map((_, i) => (
+				<div
+					key={`skeleton-${
+						// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
+						i
+					}`}
+					className="flex flex-col border border-border-primary overflow-hidden"
+				>
+					<div className="flex items-center justify-between h-12 px-5 border-b border-border-primary">
+						<div className="h-4 w-32 bg-bg-surface animate-pulse" />
+						<div className="h-4 w-24 bg-bg-surface animate-pulse" />
+					</div>
+					<div className="h-[120px] bg-bg-input animate-pulse" />
+				</div>
+			))}
+		</section>
+	);
+}
+
+export default async function LeaderboardPage() {
 	prefetch(trpc.leaderboard.stats.queryOptions());
 
 	return (
@@ -43,82 +141,9 @@ export default async function LeaderboardPage() {
 					</section>
 
 					{/* Leaderboard Entries */}
-					<section className="flex flex-col gap-5">
-						{entries.map((entry, idx) => {
-							const needsCollapsible = entry.lineCount > 5;
-
-							return (
-								<article
-									key={entry.id}
-									className="flex flex-col border border-border-primary overflow-hidden"
-								>
-									{/* Meta Row */}
-									<div className="flex items-center justify-between h-12 px-5 border-b border-border-primary">
-										{/* Left: Rank + Score */}
-										<div className="flex items-center gap-4">
-											{/* Rank */}
-											<div className="flex items-center gap-1.5 font-mono">
-												<span className="text-[13px] text-text-tertiary">
-													#
-												</span>
-												<span className="text-sm font-bold text-accent-amber">
-													{idx + 1}
-												</span>
-											</div>
-
-											{/* Score */}
-											<div className="flex items-center gap-1.5 font-mono">
-												<span className="text-xs text-text-tertiary">
-													score
-												</span>
-												<span
-													className={`text-sm font-bold ${scoreColor(entry.score)}`}
-												>
-													{entry.score.toFixed(1)}
-												</span>
-											</div>
-										</div>
-
-										{/* Right: Language + Lines + View Link */}
-										<div className="flex items-center gap-3 font-mono text-xs">
-											<span className="text-text-secondary">
-												{entry.language}
-											</span>
-											<span className="text-text-tertiary">
-												{entry.lineCount} line
-												{entry.lineCount !== 1 ? "s" : ""}
-											</span>
-											<a
-												href={`/roast/${entry.id}`}
-												className="text-accent-green hover:text-accent-green/80 transition-colors"
-											>
-												view &rarr;
-											</a>
-										</div>
-									</div>
-
-									{/* Code Block */}
-									{needsCollapsible ? (
-										<CollapsibleCode>
-											<CodeBlock
-												code={entry.code}
-												lang={entry.language as BundledLanguage}
-												showLineNumbers
-												className="border-0"
-											/>
-										</CollapsibleCode>
-									) : (
-										<CodeBlock
-											code={entry.code}
-											lang={entry.language as BundledLanguage}
-											showLineNumbers
-											className="border-0 max-h-[120px]"
-										/>
-									)}
-								</article>
-							);
-						})}
-					</section>
+					<Suspense fallback={<LeaderboardEntriesSkeleton />}>
+						<LeaderboardEntries />
+					</Suspense>
 				</div>
 			</main>
 		</HydrateClient>
