@@ -13,7 +13,7 @@ Enable the full "create roast" flow: user submits code on the homepage, Gemini A
 Three isolated changes to complete the flow:
 
 ```
-User pastes code -> CodeInputSection (existing, no changes)
+User pastes code -> CodeInputSection (modify: handle error return)
   -> submitRoast server action (modify: swap mock for AI)
     -> generateRoast (new: Gemini API + Zod validation)
     -> DB insert (existing, no changes)
@@ -29,9 +29,9 @@ User pastes code -> CodeInputSection (existing, no changes)
 | `src/lib/generate-roast.ts` | Create | Gemini AI integration + Zod schema for structured roast output |
 | `src/app/actions.ts` | Modify | Replace `generateMockRoast` with `generateRoast` |
 | `src/app/roast/[id]/page.tsx` | Modify | Replace static data with `getRoastById(id)` from DB |
+| `src/app/_components/code-input-section.tsx` | Modify | Handle `{ error }` return from `submitRoast` |
 
 No changes needed to:
-- `src/app/_components/code-input-section.tsx` — already calls `submitRoast` and redirects
 - `src/db/schema.ts` — schema already supports all fields
 - `src/db/queries.ts` — `getRoastById` already exists and returns the right shape
 - Any UI components — ScoreRing, Badge, AnalysisCard, DiffLine, CodeBlock all ready
@@ -88,7 +88,7 @@ async function generateRoast(input: {
 - System instruction specifies the exact output format, verdict options, and scoring rubric
 - User message passes the raw code
 - Scoring rubric: 0-2 = catastrophic, 3-4 = bad, 5-6 = mediocre, 7-8 = decent, 9-10 = excellent
-- Verdicts mapped to score ranges (same set as `src/db/seed.ts`): "absolute_disaster", "mass_destruction", "crime_against_code", "dumpster_fire", "needs_serious_help", "barely_functional", "below_average", "mediocre_at_best", "could_be_worse", "room_for_improvement", "getting_there", "not_terrible", "decent_effort", "above_average", "respectable_effort"
+- Verdicts mapped to score ranges (canonical list from `src/db/seed.ts`): "absolute_disaster", "mass_destruction", "career_ending", "logically_challenged", "security_nightmare", "willfully_negligent", "cpu_arsonist", "needs_serious_help", "barely_functional", "surprisingly_mediocre", "could_be_worse", "almost_acceptable", "decent_attempt", "above_average", "respectable_effort". The AI prompt must include this exact list so verdicts match what the seed uses.
 - Issues: 3-6 per roast, mix of severities, specific to the actual code
 - Diffs: show the original problematic lines as "removed" + improved version as "added" + surrounding context as "context"
 
@@ -104,34 +104,37 @@ async function generateRoast(input: {
 - Import `generateRoast` from `@/lib/generate-roast`
 - Call `generateRoast({ code, roastMode })` instead of `generateMockRoast(code)`
 - The returned `language` comes from the AI (it detects the language from the code)
-- `lineCount` is still computed from `code.split("\n").length` (don't need AI for this)
-- Keep all existing validation (non-empty code, < 10,000 chars)
+- `lineCount` stays in `submitRoast`, computed from `code.split("\n").length` before the DB insert (same location as current code, line 13 of actions.ts)
+- Convert existing validation `throw`s to `return { error: "..." }` for consistency — all error paths now use the same return pattern instead of mixing throws and returns
 - Keep the DB transaction insert (roasts + roastIssues + roastDiffs)
-- Wrap the `generateRoast` call in try/catch — if AI fails, return `{ error: "..." }` instead of throwing
+- Wrap the `generateRoast` call in try/catch — if AI fails, return `{ error: "..." }`
 
 **Return type update:**
-- Current: `{ id: string }` on success
-- New: `{ id: string }` on success, `{ error: string }` on failure
-- `CodeInputSection` already handles the success case (redirects); needs a minor update to show error state if `result.error` exists
+- Current: `{ id: string }` on success (throws on error)
+- New: `{ id: string }` on success, `{ error: string }` on failure (never throws)
+- Use discriminated union: check `"error" in result` to distinguish success from failure
 
-**Minor update to `CodeInputSection`:**
-- Check for `result.error` after calling `submitRoast`
-- If error, don't redirect — show inline error message or keep the form state
+**Update to `CodeInputSection`:**
+- After `const result = await submitRoast(code, roastMode)`, check `"error" in result`
+- If error, don't redirect — set an error state string and display it inline (e.g., below the submit button in `font-mono text-xs text-accent-red`)
+- If success, redirect as before (`router.push(\`/roast/${result.id}\`)`)
+- Remove the existing try/catch around `submitRoast` since it no longer throws
 
 ### Part 3: `src/app/roast/[id]/page.tsx`
 
 **Changes:**
-- Remove `ROAST` static constant and `ROAST_MODE` constant
+- Remove `ROAST` static constant
 - Import `getRoastById` from `@/db/queries`
 - Import `notFound` from `next/navigation`
 - At the top of the async function: `const roast = await getRoastById(id)`
 - If `roast` is `null`, call `notFound()` (renders Next.js 404 page)
 - Replace all `ROAST.xxx` references with `roast.xxx`
+- Map verdict Badge variant dynamically based on score: score 0-4 = `"critical"`, 4-7 = `"warning"`, 7-10 = `"good"`. Currently hardcoded to `"critical"` — add a `verdictVariant(score)` helper function.
 - The data shape from `getRoastById` matches what the page expects:
   - `roast.score`, `roast.verdict`, `roast.quote`, `roast.language`, `roast.lineCount`, `roast.code`
   - `roast.issues` — array with `{ id, severity, title, description, order }`
   - `roast.diffs` — array with `{ id, type, code, order }`
-- Add `"use cache"` + `cacheLife("hours")` for caching (roast results are immutable)
+- Import `cacheLife` from `"next/cache"` and add `"use cache"` + `cacheLife("hours")` for caching (roast results are immutable)
 
 ## Constraints
 
