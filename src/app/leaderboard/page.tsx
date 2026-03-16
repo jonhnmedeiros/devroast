@@ -1,6 +1,7 @@
 import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboard } from "@/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import type { BundledLanguage } from "shiki";
 import { CollapsibleCode } from "../_components/collapsible-code";
@@ -13,6 +14,9 @@ function scoreColor(score: number) {
 }
 
 async function LeaderboardEntries() {
+	"use cache";
+	cacheLife("hours");
+
 	const entries = await getLeaderboard(20);
 
 	return (

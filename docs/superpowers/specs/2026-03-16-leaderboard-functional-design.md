@@ -55,19 +55,21 @@ No changes needed to:
 - Add `scoreColor()` helper (same as homepage): score ≤3 → `text-accent-red`, ≤6 → `text-accent-amber`, >6 → `text-accent-green`
 
 **Data flow:**
-- Call `getLeaderboard(20)` at the top of the async function
-- Call `prefetch(trpc.leaderboard.stats.queryOptions())` for stats
+- Call `const entries = await getLeaderboard(20)` at the top of the async function
+- Call `prefetch(trpc.leaderboard.stats.queryOptions())` — fire-and-forget, no `await` (same as homepage pattern). The dehydration boundary handles it.
 - Wrap content in `HydrateClient`
 
 **Stats row:** Replace hardcoded `{STATS.total.toLocaleString("en-US")} submissions` with `<LeaderboardStats />` client component.
 
 **Entries rendering:**
 - Iterate with `entries.map((entry, idx) => ...)` where rank is `idx + 1`
-- Score color uses `scoreColor(entry.score)`
+- Replace the current hardcoded `text-accent-red` on score with dynamic `scoreColor(entry.score)`
+- Use `entry.lineCount` from DB for both the collapsible threshold check AND the line count display in the meta row (remove the current `entry.code.split("\n").length` computation)
+- Cast `entry.language as BundledLanguage` when passing to `CodeBlock`'s `lang` prop
 - Code rendering: if `entry.lineCount > 5`, wrap `CodeBlock` in `CollapsibleCode`. Otherwise, render `CodeBlock` directly.
-- When using `CollapsibleCode`: remove `h-[120px]` from CodeBlock (CollapsibleCode manages height via its 120px maxHeight). Keep `showLineNumbers` and `border-0`.
-- When not using `CollapsibleCode`: keep `h-[120px]` on CodeBlock as a max display constraint.
-- Add "view →" link to `/roast/{entry.id}` in the meta row's right side, after language and line count.
+- When using `CollapsibleCode`: remove `h-[120px]` from CodeBlock (CollapsibleCode manages height via its 120px maxHeight). Keep `showLineNumbers` and `border-0`. Note: homepage preview does NOT use `showLineNumbers` inside CollapsibleCode, but leaderboard intentionally keeps them for the detailed view.
+- When not using `CollapsibleCode`: keep `h-[120px]` on CodeBlock as a max display constraint. Keep `showLineNumbers`.
+- Add "view →" link to `/roast/{entry.id}` as a separate element inside the meta row's right-side `<div>`, after language and line count spans. Style: `text-accent-green hover:text-accent-green/80 transition-colors` (same as homepage).
 
 ### `src/app/_components/leaderboard-stats.tsx`
 
@@ -75,8 +77,12 @@ Client component (`"use client"`) that:
 - Uses `useTRPC()` from `@/trpc/client` + `useQuery` from `@tanstack/react-query`
 - Calls `trpc.leaderboard.stats.queryOptions()` to get `{ total, avgScore }`
 - Implements NumberFlow animation pattern: `useState({ total: 0, avgScore: 0 })` + `useEffect` to trigger 0→N animation
-- Renders: `<NumberFlow value={total} /> submissions · avg score: <NumberFlow value={avgScore} />/10`
+- NumberFlow format props:
+  - `total`: `format={{ useGrouping: true }}`
+  - `avgScore`: `format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}` with `suffix="/10"`
+- Renders: `<NumberFlow value={total} /> submissions · avg score: <NumberFlow value={avgScore} suffix="/10" />`
 - Same visual styling as the current stats row: `font-mono text-xs text-text-tertiary`
+- Export pattern: `export { LeaderboardStats }` (named export at bottom, matching codebase convention)
 
 ## Score Color Logic
 

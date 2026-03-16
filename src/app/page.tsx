@@ -2,6 +2,7 @@ import { button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboardPreview, getStats } from "@/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import type { BundledLanguage } from "shiki";
 import { CodeInputSection } from "./_components/code-input-section";
@@ -16,6 +17,9 @@ function scoreColor(score: number) {
 }
 
 async function LeaderboardPreview() {
+	"use cache";
+	cacheLife("hours");
+
 	const [entries, stats] = await Promise.all([
 		getLeaderboardPreview(),
 		getStats(),
