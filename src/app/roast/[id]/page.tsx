@@ -4,96 +4,10 @@ import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { ScoreRing } from "@/components/ui/score-ring";
+import { getRoastById } from "@/db/queries";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import type { BundledLanguage } from "shiki";
-
-// ---------------------------------------------------------------------------
-// Static Data (based on Pencil design - Screen 2)
-// ---------------------------------------------------------------------------
-
-const ROAST = {
-	score: 3.5,
-	verdict: "needs_serious_help",
-	quote:
-		"this code looks like it was written during a power outage... in 2005.",
-	language: "javascript",
-	lineCount: 7,
-	code: `function calculateTotal(items) {
-  var total = 0;
-  for (var i = 0; i < items.length; i++) {
-    total = total + items[i].price;
-  }
-
-  if (total > 100) {
-    console.log("discount applied");
-    total = total * 0.9;
-  }
-
-  // TODO: handle tax calculation
-  // TODO: handle currency conversion
-
-  return total;
-}`,
-	issues: [
-		{
-			id: 1,
-			severity: "critical" as const,
-			title: "using var instead of const/let",
-			description:
-				"var is function-scoped and leads to hoisting bugs. use const by default, let when reassignment is needed.",
-		},
-		{
-			id: 2,
-			severity: "warning" as const,
-			title: "imperative loop pattern",
-			description:
-				"for loops are verbose and error-prone. use .reduce() or .map() for cleaner, functional transformations.",
-		},
-		{
-			id: 3,
-			severity: "good" as const,
-			title: "clear naming conventions",
-			description:
-				"calculateTotal and items are descriptive, self-documenting names that communicate intent without comments.",
-		},
-		{
-			id: 4,
-			severity: "good" as const,
-			title: "single responsibility",
-			description:
-				"the function does one thing well — calculates a total. no side effects, no mixed concerns, no hidden complexity.",
-		},
-	],
-	diffs: [
-		{
-			id: 1,
-			type: "context" as const,
-			code: "function calculateTotal(items) {",
-		},
-		{ id: 2, type: "removed" as const, code: "  var total = 0;" },
-		{
-			id: 3,
-			type: "removed" as const,
-			code: "  for (var i = 0; i < items.length; i++) {",
-		},
-		{
-			id: 4,
-			type: "removed" as const,
-			code: "    total = total + items[i].price;",
-		},
-		{ id: 5, type: "removed" as const, code: "  }" },
-		{ id: 6, type: "removed" as const, code: "  return total;" },
-		{
-			id: 7,
-			type: "added" as const,
-			code: "  return items.reduce((sum, item) => sum + item.price, 0);",
-		},
-		{ id: 8, type: "context" as const, code: "}" },
-	],
-};
-
-// ---------------------------------------------------------------------------
-// Helper Components
-// ---------------------------------------------------------------------------
 
 function SectionTitle({ prompt, title }: { prompt: string; title: string }) {
 	return (
@@ -112,18 +26,26 @@ function Divider() {
 	return <div className="h-px w-full bg-border-primary" />;
 }
 
-// ---------------------------------------------------------------------------
-// Page Component
-// ---------------------------------------------------------------------------
+function verdictVariant(score: number): "critical" | "warning" | "good" {
+	if (score < 4) return "critical";
+	if (score < 7) return "warning";
+	return "good";
+}
 
 export default async function RoastResultsPage({
 	params,
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	await params;
+	"use cache";
+	cacheLife("hours");
 
-	const roast = ROAST;
+	const { id } = await params;
+	const roast = await getRoastById(id);
+
+	if (!roast) {
+		notFound();
+	}
 
 	const issueRows: Array<Array<(typeof roast.issues)[number]>> = [];
 	for (let i = 0; i < roast.issues.length; i += 2) {
@@ -138,7 +60,7 @@ export default async function RoastResultsPage({
 					<ScoreRing score={roast.score} />
 
 					<div className="flex flex-col gap-4 flex-1">
-						<Badge variant="critical" size="lg">
+						<Badge variant={verdictVariant(roast.score)} size="lg">
 							verdict: {roast.verdict}
 						</Badge>
 
