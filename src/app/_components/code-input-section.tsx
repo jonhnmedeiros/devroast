@@ -30,6 +30,7 @@ function CodeInputSection() {
 	const [roastMode, setRoastMode] = useState(true);
 	const [isPending, startTransition] = useTransition();
 	const [isOverLimit, setIsOverLimit] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const handleLimitChange = useCallback((overLimit: boolean) => {
 		setIsOverLimit(overLimit);
@@ -38,14 +39,17 @@ function CodeInputSection() {
 	function handleSubmit() {
 		if (!code.trim() || isPending || isOverLimit) return;
 
+		setError(null);
+
 		startTransition(async () => {
-			try {
-				const { id } = await submitRoast(code, roastMode);
-				router.push(`/roast/${id}`);
-			} catch (err) {
-				// TODO: show error toast
-				console.error("Failed to submit roast:", err);
+			const result = await submitRoast(code, roastMode);
+
+			if ("error" in result) {
+				setError(result.error);
+				return;
 			}
+
+			router.push(`/roast/${result.id}`);
 		});
 	}
 
@@ -61,20 +65,30 @@ function CodeInputSection() {
 			/>
 
 			{/* Actions Bar */}
-			<div className="flex items-center justify-between w-full max-w-[780px]">
-				<div className="flex items-center gap-4">
-					<Switch
-						checked={roastMode}
-						onCheckedChange={setRoastMode}
-						label="roast mode"
-					/>
-					<span className="font-mono text-xs text-text-tertiary">
-						{"// maximum sarcasm enabled"}
-					</span>
+			<div className="flex flex-col gap-3 w-full max-w-[780px]">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-4">
+						<Switch
+							checked={roastMode}
+							onCheckedChange={setRoastMode}
+							label="roast mode"
+						/>
+						<span className="font-mono text-xs text-text-tertiary">
+							{"// maximum sarcasm enabled"}
+						</span>
+					</div>
+					<Button variant="primary" onClick={handleSubmit} disabled={isDisabled}>
+						{isPending ? "$ roasting..." : "$ roast_my_code"}
+					</Button>
 				</div>
-				<Button variant="primary" onClick={handleSubmit} disabled={isDisabled}>
-					{isPending ? "$ roasting..." : "$ roast_my_code"}
-				</Button>
+
+				{/* Error Message */}
+				{error && (
+					<p className="font-mono text-xs text-accent-red">
+						{"// error: "}
+						{error}
+					</p>
+				)}
 			</div>
 		</>
 	);
