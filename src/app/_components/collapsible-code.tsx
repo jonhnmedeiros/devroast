@@ -18,13 +18,14 @@ function CollapsibleCode({
 		<div>
 			<div
 				className="relative overflow-hidden"
-				style={expanded ? undefined : { maxHeight: 120 }}
+				style={{ maxHeight: expanded ? "none" : 120 }}
 			>
 				{children}
-				{/* Fade gradient — only visible when collapsed */}
-				{!expanded && (
-					<div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-bg-input to-transparent pointer-events-none" />
-				)}
+				{/* Fade gradient — always rendered, visibility controlled by opacity */}
+				<div
+					className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-bg-input to-transparent pointer-events-none transition-opacity"
+					style={{ opacity: expanded ? 0 : 1 }}
+				/>
 			</div>
 
 			<button

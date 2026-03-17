@@ -4,21 +4,25 @@ import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { ScoreRing } from "@/components/ui/score-ring";
-import { getRoastById, getRoastForOg } from "@/db/queries";
+import { getRoastById } from "@/db/queries";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
-import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import type { BundledLanguage } from "shiki";
+
+async function getCachedRoast(id: string) {
+	"use cache";
+	cacheLife("hours");
+	return getRoastById(id);
+}
 
 export async function generateMetadata({
 	params,
 }: {
 	params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-	await connection();
 	const { id } = await params;
-	const roast = await getRoastForOg(id);
+	const roast = await getCachedRoast(id);
 
 	if (!roast) {
 		return { title: "Roast not found — DevRoast" };
@@ -73,11 +77,8 @@ export default async function RoastResultsPage({
 }: {
 	params: Promise<{ id: string }>;
 }) {
-	"use cache";
-	cacheLife("hours");
-
 	const { id } = await params;
-	const roast = await getRoastById(id);
+	const roast = await getCachedRoast(id);
 
 	if (!roast) {
 		notFound();

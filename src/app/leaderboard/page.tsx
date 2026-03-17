@@ -1,6 +1,5 @@
 import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboard } from "@/db/queries";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import type { BundledLanguage } from "shiki";
@@ -13,11 +12,14 @@ function scoreColor(score: number) {
 	return "text-accent-green";
 }
 
-async function LeaderboardEntries() {
+async function getLeaderboardData() {
 	"use cache";
 	cacheLife("hours");
+	return getLeaderboard(20);
+}
 
-	const entries = await getLeaderboard(20);
+async function LeaderboardEntries() {
+	const entries = await getLeaderboardData();
 
 	return (
 		<section className="flex flex-col gap-5">
@@ -115,12 +117,9 @@ function LeaderboardEntriesSkeleton() {
 	);
 }
 
-export default async function LeaderboardPage() {
-	prefetch(trpc.leaderboard.stats.queryOptions());
-
+export default function LeaderboardPage() {
 	return (
-		<HydrateClient>
-			<main className="flex-1 flex flex-col w-full">
+		<main className="flex-1 flex flex-col w-full">
 				{/* Main Content */}
 				<div className="flex flex-col gap-10 w-full max-w-[1360px] mx-auto px-20 py-10">
 					{/* Hero Section */}
@@ -150,6 +149,5 @@ export default async function LeaderboardPage() {
 					</Suspense>
 				</div>
 			</main>
-		</HydrateClient>
 	);
 }

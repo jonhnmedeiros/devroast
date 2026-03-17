@@ -1,7 +1,6 @@
 import { button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { getLeaderboardPreview, getStats } from "@/db/queries";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import type { BundledLanguage } from "shiki";
@@ -16,14 +15,14 @@ function scoreColor(score: number) {
 	return "text-accent-green";
 }
 
-async function LeaderboardPreview() {
+async function getLeaderboardPreviewData() {
 	"use cache";
 	cacheLife("hours");
+	return Promise.all([getLeaderboardPreview(), getStats()]);
+}
 
-	const [entries, stats] = await Promise.all([
-		getLeaderboardPreview(),
-		getStats(),
-	]);
+async function LeaderboardPreview() {
+	const [entries, stats] = await getLeaderboardPreviewData();
 
 	return (
 		<section className="flex flex-col gap-6 w-full max-w-[960px]">
@@ -124,12 +123,9 @@ async function LeaderboardPreview() {
 	);
 }
 
-export default async function HomePage() {
-	prefetch(trpc.leaderboard.stats.queryOptions());
-
+export default function HomePage() {
 	return (
-		<HydrateClient>
-			<main className="flex-1 flex flex-col items-center gap-8 w-full max-w-[1360px] mx-auto px-10 pt-20 pb-[60px]">
+		<main className="flex-1 flex flex-col items-center gap-8 w-full max-w-[1360px] mx-auto px-10 pt-20 pb-[60px]">
 				{/* Hero */}
 				<div className="flex flex-col items-center gap-3">
 					<div className="flex items-center gap-3">
@@ -161,6 +157,5 @@ export default async function HomePage() {
 					<LeaderboardPreview />
 				</Suspense>
 			</main>
-		</HydrateClient>
 	);
 }

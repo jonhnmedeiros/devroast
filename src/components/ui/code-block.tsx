@@ -1,6 +1,13 @@
+import { cacheLife } from "next/cache";
 import type { BundledLanguage } from "shiki";
 import { codeToHtml } from "shiki";
 import { twMerge } from "tailwind-merge";
+
+async function highlightCode(code: string, lang: BundledLanguage) {
+	"use cache";
+	cacheLife("max");
+	return codeToHtml(code, { lang, theme: "vesper" });
+}
 
 type CodeBlockProps = {
 	code: string;
@@ -15,10 +22,7 @@ async function CodeBlock({
 	showLineNumbers,
 	className,
 }: CodeBlockProps) {
-	const html = await codeToHtml(code, {
-		lang,
-		theme: "vesper",
-	});
+	const html = await highlightCode(code, lang);
 
 	const lineCount = showLineNumbers ? code.split("\n").length : 0;
 
