@@ -4,10 +4,44 @@ import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { ScoreRing } from "@/components/ui/score-ring";
-import { getRoastById } from "@/db/queries";
+import { getRoastById, getRoastForOg } from "@/db/queries";
+import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { BundledLanguage } from "shiki";
+
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+	const { id } = await params;
+	const roast = await getRoastForOg(id);
+
+	if (!roast) {
+		return { title: "Roast not found — DevRoast" };
+	}
+
+	const title = `Score ${roast.score.toFixed(1)}/10 — DevRoast`;
+	const description = roast.quote;
+	const ogImage = `/og?id=${id}`;
+
+	return {
+		title,
+		description,
+		openGraph: {
+			title,
+			description,
+			images: [{ url: ogImage, width: 1200, height: 630 }],
+		},
+		twitter: {
+			card: "summary_large_image",
+			title,
+			description,
+			images: [ogImage],
+		},
+	};
+}
 
 function SectionTitle({ prompt, title }: { prompt: string; title: string }) {
 	return (

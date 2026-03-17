@@ -2,43 +2,43 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
 
 const roastOutputSchema = z.object({
-	score: z.number().min(0).max(10),
-	verdict: z.string(),
-	quote: z.string(),
-	language: z.string(),
-	issues: z.array(
-		z.object({
-			severity: z.enum(["critical", "warning", "good"]),
-			title: z.string(),
-			description: z.string(),
-		}),
-	),
-	diffs: z.array(
-		z.object({
-			type: z.enum(["added", "removed", "context"]),
-			code: z.string(),
-		}),
-	),
+  score: z.number().min(0).max(10),
+  verdict: z.string(),
+  quote: z.string(),
+  language: z.string(),
+  issues: z.array(
+    z.object({
+      severity: z.enum(["critical", "warning", "good"]),
+      title: z.string(),
+      description: z.string(),
+    }),
+  ),
+  diffs: z.array(
+    z.object({
+      type: z.enum(["added", "removed", "context"]),
+      code: z.string(),
+    }),
+  ),
 });
 
 type RoastOutput = z.infer<typeof roastOutputSchema>;
 
 const VERDICTS = [
-	"absolute_disaster",
-	"mass_destruction",
-	"career_ending",
-	"needs_serious_help",
-	"logically_challenged",
-	"security_nightmare",
-	"willfully_negligent",
-	"cpu_arsonist",
-	"barely_functional",
-	"surprisingly_mediocre",
-	"could_be_worse",
-	"almost_acceptable",
-	"not_terrible",
-	"decent_attempt",
-	"respectable_effort",
+  "absolute_disaster",
+  "mass_destruction",
+  "career_ending",
+  "needs_serious_help",
+  "logically_challenged",
+  "security_nightmare",
+  "willfully_negligent",
+  "cpu_arsonist",
+  "barely_functional",
+  "surprisingly_mediocre",
+  "could_be_worse",
+  "almost_acceptable",
+  "not_terrible",
+  "decent_attempt",
+  "respectable_effort",
 ];
 
 const SYSTEM_INSTRUCTION = `You are a code analysis expert. Analyze the provided code and return a structured JSON response.
@@ -51,7 +51,7 @@ const SYSTEM_INSTRUCTION = `You are a code analysis expert. Analyze the provided
 - 9-10: Excellent, well-written code
 
 ## Verdict Selection (pick ONE based on score):
-${VERDICTS.map((v, i) => `- Score ${Math.floor(i * 10 / VERDICTS.length)}-${Math.floor((i + 1) * 10 / VERDICTS.length)}: "${v}"`).join("\n")}
+${VERDICTS.map((v, i) => `- Score ${Math.floor((i * 10) / VERDICTS.length)}-${Math.floor(((i + 1) * 10) / VERDICTS.length)}: "${v}"`).join("\n")}
 
 ## Response Format:
 - score: number between 0 and 10 (can be decimal like 3.5)
@@ -83,76 +83,76 @@ Be professional, helpful, and constructive in the quote. Focus on improvement op
 - "The code works but has notable quality concerns worth addressing."`;
 
 async function generateRoast(input: {
-	code: string;
-	roastMode: boolean;
+  code: string;
+  roastMode: boolean;
 }): Promise<RoastOutput> {
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) {
-		throw new Error("GEMINI_API_KEY environment variable is not set");
-	}
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
 
-	const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
-	const systemInstruction =
-		SYSTEM_INSTRUCTION + (input.roastMode ? ROAST_MODE_TONE : POLITE_MODE_TONE);
+  const systemInstruction =
+    SYSTEM_INSTRUCTION + (input.roastMode ? ROAST_MODE_TONE : POLITE_MODE_TONE);
 
-	const response = await ai.models.generateContent({
-		model: "gemini-2.0-flash",
-		contents: [
-			{
-				role: "user",
-				parts: [{ text: `Analyze this code:\n\n${input.code}` }],
-			},
-		],
-		config: {
-			systemInstruction,
-			temperature: input.roastMode ? 1.0 : 0.7,
-			responseMimeType: "application/json",
-			responseJsonSchema: {
-				type: Type.OBJECT,
-				properties: {
-					score: { type: Type.NUMBER },
-					verdict: { type: Type.STRING },
-					quote: { type: Type.STRING },
-					language: { type: Type.STRING },
-					issues: {
-						type: Type.ARRAY,
-						items: {
-							type: Type.OBJECT,
-							properties: {
-								severity: { type: Type.STRING },
-								title: { type: Type.STRING },
-								description: { type: Type.STRING },
-							},
-							required: ["severity", "title", "description"],
-						},
-					},
-					diffs: {
-						type: Type.ARRAY,
-						items: {
-							type: Type.OBJECT,
-							properties: {
-								type: { type: Type.STRING },
-								code: { type: Type.STRING },
-							},
-							required: ["type", "code"],
-						},
-					},
-				},
-				required: ["score", "verdict", "quote", "language", "issues", "diffs"],
-			},
-		},
-	});
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: `Analyze this code:\n\n${input.code}` }],
+      },
+    ],
+    config: {
+      systemInstruction,
+      temperature: input.roastMode ? 1.0 : 0.7,
+      responseMimeType: "application/json",
+      responseJsonSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.NUMBER },
+          verdict: { type: Type.STRING },
+          quote: { type: Type.STRING },
+          language: { type: Type.STRING },
+          issues: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                severity: { type: Type.STRING },
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+              },
+              required: ["severity", "title", "description"],
+            },
+          },
+          diffs: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                type: { type: Type.STRING },
+                code: { type: Type.STRING },
+              },
+              required: ["type", "code"],
+            },
+          },
+        },
+        required: ["score", "verdict", "quote", "language", "issues", "diffs"],
+      },
+    },
+  });
 
-	const text = response.text;
-	if (!text) {
-		throw new Error("Gemini returned empty response");
-	}
+  const text = response.text;
+  if (!text) {
+    throw new Error("Gemini returned empty response");
+  }
 
-	const parsed = JSON.parse(text);
-	const validated = roastOutputSchema.parse(parsed);
+  const parsed = JSON.parse(text);
+  const validated = roastOutputSchema.parse(parsed);
 
-	return validated;
+  return validated;
 }
 
 export { generateRoast, type RoastOutput };
