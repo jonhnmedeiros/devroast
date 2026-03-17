@@ -7,6 +7,7 @@ import { ScoreRing } from "@/components/ui/score-ring";
 import { getRoastById, getRoastForOg } from "@/db/queries";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import type { BundledLanguage } from "shiki";
 
@@ -15,6 +16,7 @@ export async function generateMetadata({
 }: {
 	params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+	await connection();
 	const { id } = await params;
 	const roast = await getRoastForOg(id);
 
