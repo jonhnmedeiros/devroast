@@ -9,7 +9,7 @@ Gerar imagens OpenGraph dinâmicas para roasts compartilháveis. Quando um usuá
 | Item | Decisão |
 |------|---------|
 | Biblioteca | `@takumi-rs/image-response` |
-| Fonte | Geist Mono (built-in do Takumi) |
+| Fonte | Geist Mono (built-in do Takumi, sem necessidade de carregar) |
 | Formato | PNG |
 | Dimensões | 1200x630 |
 | Cache | `max-age=31536000, immutable` |
@@ -36,9 +36,12 @@ pnpm add @takumi-rs/image-response
 ### Fluxo
 
 1. Recebe `id` via query param (`/og?id=abc123`)
-2. Busca roast via `getRoastForOg(id)` (query já existe)
-3. Retorna 404 se não encontrar
-4. Renderiza imagem com Takumi
+2. Se `id` não fornecido, retorna 400 Bad Request
+3. Busca roast via `getRoastForOg(id)` (query já existe)
+4. Se não encontrar, retorna 404
+5. Renderiza imagem com Takumi
+
+**Nota:** Remover o modo de preview com query params (`?score=&verdict=&...`) do código atual. Apenas IDs reais são suportados.
 
 ### Layout Visual
 
@@ -60,13 +63,15 @@ pnpm add @takumi-rs/image-response
 
 ### Cores Dinâmicas
 
-Score determina a cor do número e do verdict:
+Score determina a cor do número e do verdict (alinhado com `verdictVariant()` em `page.tsx`):
 
 | Condição | Cor |
 |----------|-----|
-| `score < 4` | `#ef4444` (vermelho) |
-| `score < 7` | `#f59e0b` (amarelo) |
-| `score >= 7` | `#10b981` (verde) |
+| `score < 4` | `#ef4444` (vermelho/critical) |
+| `score < 7` | `#f59e0b` (amarelo/warning) |
+| `score >= 7` | `#10b981` (verde/good) |
+
+**Nota:** Usar `<` (não `<=`) para consistência com a lógica existente na página de roast.
 
 ### Estilização
 
@@ -80,10 +85,10 @@ Usar `tw` prop do Takumi ao invés de objetos `style`:
     <span tw="text-xl font-medium text-white">devroast</span>
   </div>
   
-  {/* Score */}
+  {/* Score - exibir com 1 casa decimal */}
   <div tw="flex items-baseline gap-1">
     <span tw="text-[160px] font-black leading-none" style={{ color: scoreColor }}>
-      {score}
+      {score.toFixed(1)}
     </span>
     <span tw="text-6xl text-gray-600 leading-none">/10</span>
   </div>
@@ -99,9 +104,9 @@ Usar `tw` prop do Takumi ao invés de objetos `style`:
     lang: {lang} · {lines} lines
   </span>
   
-  {/* Quote */}
+  {/* Quote - truncar se muito longa */}
   <span tw="text-2xl text-white text-center leading-relaxed max-w-[90%]">
-    "{quote}"
+    "{quote.length > 120 ? quote.slice(0, 117) + "..." : quote}"
   </span>
 </div>
 ```
